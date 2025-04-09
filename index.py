@@ -162,7 +162,7 @@ class Jewel(turtle.Turtle):
     def __init__(self):
         turtle.Turtle.__init__(self)
         self.penup()
-        self.shape(GameVisualConfig.shape)
+        self.shape(GameVisualConfig.default_shape)
         self.goto(random.randint(GameConfig.min_x, GameConfig.max_x), random.randint(GameConfig.min_y, GameConfig.max_y))
         self.is_twinkle = False
     
@@ -216,8 +216,6 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         self.is_continued = True
     
     def score(self):
-        self.clear()
-        
         if self.is_continued is False:
             time.sleep(GameConfig.freeze_time)
             sys.exit(1)
@@ -230,7 +228,6 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
             self._end("Complete !") # 게임 종료 메시지: 완료
     
     def _end(self, content):
-        self.goto(0, 0)
         hunter.stop()
         for e in enemies:
             e.stop()
@@ -327,5 +324,5 @@ while True:
             if hunter.is_succeed():
                 floating_message.display_content("Success") # 게임 진행 메시지: 성공
     
-    gameManager.score(hunter, enemies, floating_message, floating_score)
+    gameManager.score()
     time.sleep(0.01) # 게임 종료 메시지 보여주기 위함
