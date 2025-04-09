@@ -217,7 +217,7 @@ class Game(turtle.Turtle):
         self.goto(200, 200)
         self.is_running = True
     
-    def scoring(self, hunter, enemies, floating_message, floating_score):
+    def score(self, hunter, enemies, floating_message, floating_score):
         self.clear()
         
         if self.is_running is False:
@@ -329,5 +329,5 @@ while True:
             if hunter.is_succeed():
                 floating_message.display_content("Success") # 게임 진행 메시지: 성공
     
-    game.scoring(hunter, enemies, floating_message, floating_score)
+    game.score(hunter, enemies, floating_message, floating_score)
     time.sleep(0.01) # 게임 종료 메시지 보여주기 위함
