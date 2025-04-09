@@ -4,19 +4,29 @@ import random
 import sys
 import time
 
-default_text_align = "center"
-default_font = "NeoDunggeunmo Pro"
-default_font_color = "white"
-default_shape = "blank"
-default_freeze_time = 1
+# TODO 추가기능 6. 레벨업
 
-max_x = 250
-min_x = max_x - (max_x * 2)
-max_y = 250
-min_y = max_y - (max_y * 2)
-colors = ["beige", "yellow", "pink", "orange", "red", "black"]
-shapes = ["hunter", "jewel", "twinkle"]
-enemy_shapes = ["devil", "skull", "ghost", "alien", "crocodile", "jellyfish"]
+class GameConfig:
+    up = 90
+    down = 270
+    left = 180
+    right = 0
+    max_x = 250
+    min_x = max_x - (max_x * 2)
+    max_y = 250
+    min_y = max_y - (max_y * 2)
+    max_stamps = 5
+    score_unit = 10
+    colors = ["beige", "yellow", "pink", "orange", "red", "black"]
+    shapes = ["hunter", "jewel", "twinkle"]
+    enemy_shapes = ["devil", "skull", "ghost", "alien", "crocodile", "jellyfish"]
+    freeze_time = 1
+
+class GameVisualConfig:
+    default_text_align = "center"
+    default_font = "NeoDunggeunmo Pro"
+    default_font_color = "white"
+    default_shape = "blank"
 
 class Hunter(turtle.Turtle): # Turtle 클래스 상속
     def __init__(self, speed = 1):
@@ -41,16 +51,16 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
         print(f"Distance: {dis}")
 
     def up(self):
-        self.setheading(90)
+        self.setheading(GameConfig.up)
         
     def down(self):
-        self.setheading(90 * 3)
+        self.setheading(GameConfig.down)
         
     def left(self):
-        self.setheading(90 * 2)
+        self.setheading(GameConfig.left)
         
     def right(self):
-        self.setheading(0)
+        self.setheading(GameConfig.right)
         
     def move(self):
         self.forward(self.speed)
@@ -59,17 +69,17 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
         x = self.xcor()
         y = self.ycor()
 
-        if x > max_x:
-            self.setheading(90 * 2)
-        elif x < min_x:
-            self.setheading(0)
-        elif y > max_y:
-            self.setheading(90 * 3)
-        elif y < min_y:
-            self.setheading(90)
+        if x > GameConfig.max_x:
+            self.setheading(GameConfig.left)
+        elif x < GameConfig.min_x:
+            self.setheading(GameConfig.right)
+        elif y > GameConfig.max_y:
+            self.setheading(GameConfig.down)
+        elif y < GameConfig.min_y:
+            self.setheading(GameConfig.up)
 
-        if self.stamp_idx >= 5:
-            self.clearstamps(5)
+        if self.stamp_idx >= GameConfig.max_stamps:
+            self.clearstamps(GameConfig.max_stamps)
             self.stamp_idx = 0
         self.stamp()
         self.stamp_idx += 1
@@ -81,16 +91,16 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
         self.hideturtle()
     
     def get_score(self):
-        self.score += 10
+        self.score += GameConfig.score_unit
     
     def lose_score(self):
-        self.score -= 10
+        self.score -= GameConfig.score_unit
     
     def is_failed(self):
         return self.score < 0
     
     def is_succeed(self):
-        return self.score >= 10
+        return self.score >= GameConfig.score_unit
 
 class Enemy(turtle.Turtle): # Turtle 클래스 상속
     def __init__(self, hunter, speed = 1):
@@ -98,10 +108,10 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         self.penup()
 
         # TODO 추가 기능 2. 적 이미지 랜덤 부여
-        self.shape(f"shape_{enemy_shapes[random.randint(0, 5)]}.gif")
+        self.shape(f"shape_{GameConfig.enemy_shapes[random.randint(0, 5)]}.gif")
 
         self.speed = speed
-        self.goto(random.randint(min_x, max_x), random.randint(min_y, max_y))
+        self.goto(random.randint(GameConfig.min_x, GameConfig.max_x), random.randint(GameConfig.min_y, GameConfig.max_y))
         
         self.stamp_idx = 0
         self.hunter = hunter
@@ -122,20 +132,20 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         x = self.xcor()
         y = self.ycor()
 
-        if x > max_x:
-            self.setheading(90 * 2)
-        elif x < min_x:
-            self.setheading(0)
-        elif y > max_y:
-            self.setheading(90 * 3)
-        elif y < min_y:
-            self.setheading(90)
+        if x > GameConfig.max_x:
+            self.setheading(GameConfig.left)
+        elif x < GameConfig.min_x:
+            self.setheading(GameConfig.right)
+        elif y > GameConfig.max_y:
+            self.setheading(GameConfig.down)
+        elif y < GameConfig.min_y:
+            self.setheading(GameConfig.up)
 
         if random.randint(1, 100) == 1: # TODO 추가 기능 4. 적이 무작위가 아니라 정확히 헌터를 따라오도록
             self.setheading(self.towards(self.hunter))
         
-        if self.stamp_idx >= 5:
-            self.clearstamps(5)
+        if self.stamp_idx >= GameConfig.max_stamps:
+            self.clearstamps(GameConfig.max_stamps)
             self.stamp_idx = 0
         self.stamp()
         self.stamp_idx += 1
@@ -152,8 +162,8 @@ class Jewel(turtle.Turtle):
     def __init__(self):
         turtle.Turtle.__init__(self)
         self.penup()
-        self.shape(default_shape)
-        self.goto(random.randint(min_x, max_x), random.randint(min_y, max_y))
+        self.shape(GameVisualConfig.shape)
+        self.goto(random.randint(GameConfig.min_x, GameConfig.max_x), random.randint(GameConfig.min_y, GameConfig.max_y))
         self.is_twinkle = False
     
     def twinkle(self):
@@ -174,8 +184,8 @@ class FloatingMessage(turtle.Turtle):
 
     def __init__(self, position = "bottom"):
         turtle.Turtle.__init__(self)
-        self.shape(default_shape)
-        self.color(default_font_color)
+        self.shape(GameVisualConfig.default_shape)
+        self.color(GameVisualConfig.default_font_color)
         if position == "top":
             self.xcor = 0
             self.ycor = 90
@@ -188,14 +198,14 @@ class FloatingMessage(turtle.Turtle):
 
         self.clear()
         self.teleport(self.xcor, self.ycor)
-        self.write(self.content, False, default_text_align, (default_font, 30))
+        self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
 
     def display_content(self, content):
         self.content = content
     
         self.clear()
         self.teleport(self.xcor, self.ycor)
-        self.write(self.content, False, default_text_align, (default_font, 30))
+        self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
 
 class Game(turtle.Turtle):
     def __init__(self):
@@ -203,16 +213,15 @@ class Game(turtle.Turtle):
         self.penup()
         self.hideturtle()
         self.speed(0)
-        self.shape(default_shape)
+        self.shape(GameVisualConfig.default_shape)
         self.goto(200, 200)
-        self.score = 0 # 여기서는 game score
         self.is_running = True
     
     def scoring(self, hunter, enemies, floating_message, floating_score):
         self.clear()
         
         if self.is_running is False:
-            time.sleep(default_freeze_time)
+            time.sleep(GameConfig.freeze_time)
             sys.exit(1)
         
         floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
@@ -264,13 +273,13 @@ floating_message = FloatingMessage("top")
 
 if turtle_speed == 0 or enemy_cnt == 0 or enemy_speed == 0 or jewel_cnt == 0:
     floating_message.display_content("Can't Start Game !") # 게임 종료 메시지: 게임을 시작할 수 없음
-    time.sleep(default_freeze_time)
+    time.sleep(GameConfig.freeze_time)
     sys.exit(1)
 
 floating_score = FloatingMessage("bottom")
 floating_score.display_score(0)
 
-shapes = shapes + enemy_shapes
+shapes = GameConfig.shapes + GameConfig.enemy_shapes
 for shape in shapes:
     s.register_shape(f"shape_{shape}.gif")
 
@@ -298,7 +307,7 @@ floating_message.display_content("Start !")
 for i in range(3):
     s.update()
     floating_message.display_content(str(3 - i))
-    time.sleep(default_freeze_time)
+    time.sleep(GameConfig.freeze_time)
 
 while True:
     s.update()
