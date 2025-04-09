@@ -207,39 +207,39 @@ class FloatingMessage(turtle.Turtle):
         self.teleport(self.xcor, self.ycor)
         self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
 
-class Game(turtle.Turtle):
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.penup()
-        self.hideturtle()
-        self.speed(0)
-        self.shape(GameVisualConfig.default_shape)
-        self.goto(200, 200)
-        self.is_running = True
+class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
+    def __init__(self, hunter, enemies, floating_message, floating_score):
+        self.hunter = hunter
+        self.enemies = enemies
+        self.floating_message = floating_message
+        self.floating_score = floating_score
+        self.is_continued = True
     
-    def score(self, hunter, enemies, floating_message, floating_score):
+    def score(self):
         self.clear()
         
-        if self.is_running is False:
+        if self.is_continued is False:
             time.sleep(GameConfig.freeze_time)
             sys.exit(1)
         
         floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
         
         if hunter.is_failed():
-            self.goto(0, 0)
-            hunter.stop()
-            for e in enemies:
-                e.stop()
-            floating_message.display_content("Failed !") # 게임 종료 메시지: 실패
-            self.is_running = False
-        elif jewel_cnt <= 0:
-            self.goto(0, 0)
-            hunter.stop()
-            for e in enemies:
-                e.stop()
-            floating_message.display_content("Complete !") # 게임 종료 메시지: 완료
-            self.is_running = False
+            self._end("Failed !") # 게임 종료 메시지: 실패
+        elif self._is_level_clear():
+            self._end("Complete !") # 게임 종료 메시지: 완료
+    
+    def _end(self, content):
+        self.goto(0, 0)
+        hunter.stop()
+        for e in enemies:
+            e.stop()
+        floating_message.display_content(content)
+        self.is_continued = False
+
+    def _is_level_clear(self):
+        global jewel_cnt
+        return jewel_cnt <= 0
 
 # TODO 추가기능 1. 입력 간소화
 input = input()
@@ -262,8 +262,6 @@ s = turtle.Screen()
 pygame.mixer.init()
 pygame.mixer.music.load("bgm.mp3") # 배경 이미지 파일 출처: https://pixabay.com/ko/music/search/genre/%eb%a9%8d%ec%b2%ad%ec%9d%b4/?pagi=2
 
-game = Game()
-
 s.setup(500, 500)
 s.tracer(0) # 코드 실행 과정을 화면에 표시하지 않음
 
@@ -276,25 +274,25 @@ if turtle_speed == 0 or enemy_cnt == 0 or enemy_speed == 0 or jewel_cnt == 0:
     time.sleep(GameConfig.freeze_time)
     sys.exit(1)
 
-floating_score = FloatingMessage("bottom")
-floating_score.display_score(0)
-
 shapes = GameConfig.shapes + GameConfig.enemy_shapes
 for shape in shapes:
     s.register_shape(f"shape_{shape}.gif")
 
 hunter = Hunter(turtle_speed)
-# hunter.location()
 
 enemies = []
 for i in range(enemy_cnt): # 적 거북들 {enemy_cnt}개 생성
     enemy = Enemy(hunter, enemy_speed)
     enemies.append(enemy)
-    # enemy.location()
 
 jewels = []
 for i in range(jewel_cnt): # 보물 {jewel_cnt}개 생성
     jewels.append(Jewel())
+
+floating_score = FloatingMessage("bottom")
+floating_score.display_score(0)
+
+gameManager = GameManager(hunter, enemies, floating_message, floating_score)
 
 turtle.listen()
 turtle.onkeypress(hunter.up, "Up")
@@ -329,5 +327,5 @@ while True:
             if hunter.is_succeed():
                 floating_message.display_content("Success") # 게임 진행 메시지: 성공
     
-    game.score(hunter, enemies, floating_message, floating_score)
+    gameManager.score(hunter, enemies, floating_message, floating_score)
     time.sleep(0.01) # 게임 종료 메시지 보여주기 위함
