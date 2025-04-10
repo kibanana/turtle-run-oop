@@ -85,10 +85,16 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
         self.stamp_idx += 1
     
     def stop(self):
-        self.speed = 0
+        self.hideturtle()
     
     def die(self):
         self.hideturtle()
+        self.speed = 0
+    
+    def level_up(self, level):
+        global turtle_speed
+        self.speed = turtle_speed + level # 레벨업 - 거북 속도 증가
+        self.showturtle()
     
     def get_score(self):
         self.score += GameConfig.score_unit
@@ -97,7 +103,9 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
         self.score -= GameConfig.score_unit
     
     def is_failed(self):
-        return self.score < 0
+        global enemy_cnt
+        return enemy_cnt <= 0
+        # return self.score < 0 # 레벨 시스템을 추가함에 따라 is_failed 판별식을 수정함
     
     def is_succeed(self):
         return self.score >= GameConfig.score_unit
@@ -151,12 +159,19 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         self.stamp_idx += 1
     
     def stop(self):
-        self.speed = 0
+        self.hideturtle()
     
     def die(self):
         global enemy_cnt
+        self.clear()
         self.hideturtle()
+        self.speed = 0
         enemy_cnt -= 1
+
+    def level_up(self, level):
+        global enemy_speed
+        self.speed = enemy_speed + level # 레벨업 - 적 속도 증가
+        self.showturtle()
     
 class Jewel(turtle.Turtle):
     def __init__(self):
@@ -176,11 +191,16 @@ class Jewel(turtle.Turtle):
     
     def die(self):
         global jewel_cnt
+        self.clear()
         self.hideturtle()
         jewel_cnt -= 1
+    
+    def level_up(self):
+        self.showturtle() # 레벨업 - 보석 재생성
 
 class FloatingMessage(turtle.Turtle):
-    content = None
+    def __init__(self):
+        self.content = None
 
     def __init__(self, position = "bottom"):
         turtle.Turtle.__init__(self)
@@ -208,31 +228,87 @@ class FloatingMessage(turtle.Turtle):
         self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
 
 class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
-    def __init__(self, hunter, enemies, floating_message, floating_score):
+    def __init__(self, initial_et, initial_jt, s, hunter, floating_message, floating_score):
+        self.initial_et = initial_et
+        self.initial_jt = initial_jt
+        self.s = s
         self.hunter = hunter
-        self.enemies = enemies
+        self.enemies = []
+        self.jewels = []
         self.floating_message = floating_message
         self.floating_score = floating_score
         self.is_continued = True
+        self.level = 1
+
+        self._reset(initial_et, initial_jt)
+
+    def start(self):
+        # TODO 추가 기능 3. 시작 카운트다운
+        self.floating_message.display_content("Start !")
+        for i in range(3):
+            self.floating_message.display_content(str(3 - i))
+            self.s.update()
+            time.sleep(GameConfig.freeze_time)
+        self.floating_message.clear()
     
     def score(self):
         if self.is_continued is False:
             time.sleep(GameConfig.freeze_time)
             sys.exit(1)
         
-        floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
+        self.floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
         
         if hunter.is_failed():
-            self._end("Failed !") # 게임 종료 메시지: 실패
+            self._end()
         elif self._is_level_clear():
-            self._end("Complete !") # 게임 종료 메시지: 완료
+            self._level_up()
     
-    def _end(self, content):
-        hunter.stop()
-        for e in enemies:
+    def _reset(self, enemy_cnt, jewel_cnt):
+        for e in self.enemies:
+            e.die()
+        
+        for j in self.jewels:
+            j.die()
+        
+        self.enemies.clear()
+        for _ in range(enemy_cnt): # 적 거북들 {enemy_cnt}개 생성
+            enemy = Enemy(hunter, enemy_speed)
+            self.enemies.append(enemy)
+        
+        self.jewels.clear()
+        for _ in range(jewel_cnt): # 보물 {jewel_cnt}개 생성
+            self.jewels.append(Jewel())
+
+    def _end(self):
+        self.hunter.stop()
+        for e in self.enemies:
             e.stop()
-        floating_message.display_content(content)
+        self.floating_message.display_content("Failed!") # 게임 종료 메시지: 실패
         self.is_continued = False
+
+    def _level_up(self):
+        global enemy_cnt
+        global jewel_cnt
+        
+        self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
+        self.s.update()  # 화면 강제 갱신
+        time.sleep(GameConfig.freeze_time)
+
+        self.hunter.stop()
+        for e in self.enemies:
+            e.stop()
+        
+        self.level += 1
+        self.hunter.level_up(self.level)
+        self._reset(self.initial_et, self.initial_jt)
+        for e in self.enemies:
+            e.level_up(self.level)
+        enemy_cnt = len(self.enemies)
+        for j in self.jewels:
+            j.level_up()
+        jewel_cnt = len(self.jewels)
+
+        self.start()
 
     def _is_level_clear(self):
         global jewel_cnt
@@ -277,19 +353,10 @@ for shape in shapes:
 
 hunter = Hunter(turtle_speed)
 
-enemies = []
-for i in range(enemy_cnt): # 적 거북들 {enemy_cnt}개 생성
-    enemy = Enemy(hunter, enemy_speed)
-    enemies.append(enemy)
-
-jewels = []
-for i in range(jewel_cnt): # 보물 {jewel_cnt}개 생성
-    jewels.append(Jewel())
-
 floating_score = FloatingMessage("bottom")
 floating_score.display_score(0)
 
-gameManager = GameManager(hunter, enemies, floating_message, floating_score)
+gameManager = GameManager(enemy_cnt, jewel_cnt, s, hunter, floating_message, floating_score)
 
 turtle.listen()
 turtle.onkeypress(hunter.up, "Up")
@@ -297,32 +364,27 @@ turtle.onkeypress(hunter.down, "Down")
 turtle.onkeypress(hunter.left, "Left")
 turtle.onkeypress(hunter.right, "Right")
 
-# TODO 추가 기능 3. 시작 카운트다운
-floating_message.display_content("Start !")
-for i in range(3):
-    s.update()
-    floating_message.display_content(str(3 - i))
-    time.sleep(GameConfig.freeze_time)
+gameManager.start()
 
 while True:
     s.update()
     hunter.move()
 
-    for e in enemies:
+    for e in gameManager.enemies:
         e.move()
         if hunter.distance(e) < 12:
             e.die()
-            enemies.remove(e)
+            gameManager.enemies.remove(e)
             hunter.lose_score()
     
-    for j in jewels:
+    for j in gameManager.jewels:
         j.twinkle()
         if hunter.distance(j) < 12:
             j.die()
-            jewels.remove(j)
+            gameManager.jewels.remove(j)
             hunter.get_score()
             if hunter.is_succeed():
                 floating_message.display_content("Success") # 게임 진행 메시지: 성공
     
     gameManager.score()
-    time.sleep(0.01) # 게임 종료 메시지 보여주기 위함
+    time.sleep(0.01) # 게임 진행/종료 메시지 보여주기 위함
