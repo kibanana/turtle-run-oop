@@ -22,7 +22,7 @@ class GameConfig:
 
 class GameVisualConfig:
     default_text_align = "center"
-    default_font = "NeoDunggeunmo Pro"
+    default_font = "NeoDunggeunmo Pro" # TODO 추가 기능 7. Neo 둥근모 폰트 사용
     default_font_color = "white"
     default_shape = "blank"
 
@@ -63,7 +63,7 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
     def move(self):
         self.forward(self.speed)
 
-        # TODO 추가 기능 5. Hunter가 화면 밖으로 나갈 수 없도록 처리
+        # TODO 추가 기능 5. 캐릭터 화면 밖으로 나갈 수 없도록 처리
         x = self.xcor()
         y = self.ycor()
 
@@ -91,7 +91,7 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
     
     def level_up(self, level):
         global turtle_speed
-        self.speed = turtle_speed + level # 레벨업 - 거북 속도 증가
+        self.speed = turtle_speed + level # 레벨업 - 캐릭터 속도 증가
         self.showturtle()
     
     def get_score(self):
@@ -117,7 +117,8 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         self.shape(f"shape_{GameConfig.enemy_shapes[random.randint(0, 5)]}.gif")
 
         self.speed = speed
-        self.goto(random.randint(GameConfig.min_x, GameConfig.max_x), random.randint(GameConfig.min_y, GameConfig.max_y))
+        self.goto(random.randint(GameConfig.min_x, GameConfig.max_x),
+                  random.randint(GameConfig.min_y, GameConfig.max_y))
         
         self.stamp_idx = 0
         self.hunter = hunter
@@ -147,7 +148,7 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         elif y < GameConfig.min_y:
             self.setheading(GameConfig.up)
 
-        # TODO 추가 기능 4. 적이 무작위가 아니라 정확히 헌터를 따라오도록
+        # TODO 추가 기능 4. 적이 정확히 캐릭터를 따라오도록 방향 조정
         if random.randint(1, 100) == 1:
             self.setheading(self.towards(self.hunter))
         
@@ -220,7 +221,10 @@ class FloatingMessage(turtle.Turtle):
 
         self.clear()
         self.teleport(self.xcor, self.ycor)
-        self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
+        self.write(self.content,
+                   False,
+                   GameVisualConfig.default_text_align,
+                   (GameVisualConfig.default_font, 30))
         turtle.update()
 
     def display_content(self, content):
@@ -229,7 +233,10 @@ class FloatingMessage(turtle.Turtle):
         self.content = content
         self.clear()
         self.teleport(self.xcor, self.ycor)
-        self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
+        self.write(self.content,
+                   False,
+                   GameVisualConfig.default_text_align,
+                   (GameVisualConfig.default_font, 30))
         turtle.update()
         time.sleep(GameConfig.freeze_time)
 
@@ -268,10 +275,7 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
             self._end()
         else:
             self.floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
-            
-        
-        
-    
+
     def _reset(self, enemy_cnt, jewel_cnt):
         for e in self.enemies:
             e.die()
@@ -280,7 +284,7 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
             j.die()
         
         self.enemies.clear()
-        for _ in range(enemy_cnt): # 적 거북들 {enemy_cnt}개 생성
+        for _ in range(enemy_cnt): # 적 {enemy_cnt}개 생성
             enemy = Enemy(hunter, enemy_speed)
             self.enemies.append(enemy)
         
@@ -295,17 +299,17 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         self.floating_message.display_content("Failed!") # 게임 종료 메시지: 실패
         self.is_continued = False
 
+    # TODO 추가 기능 6. 레벨업
     def _level_up(self):
         global enemy_cnt
         global jewel_cnt
         
-        # TODO 추가 기능 6. 레벨업
-
         self.hunter.stop()
         for e in self.enemies:
             e.stop()
 
-        self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
+        # 게임 진행 메시지: 완료 & 레벨업
+        self.floating_message.display_content(f"Complete ! Level {self.level}")
         self.floating_message.clear()
 
         self.level += 1
@@ -342,8 +346,6 @@ s.title("거북이 보물찾기 게임")
 # 이미지 파일 출처: https://www.freepik.com/free-photo/abstract-bright-green-square-pixel-tile-mosaic-wall-background-texture_18487439.htm#fromView=search&page=2&position=19&uuid=f54e2323-252e-4269-be22-c853ed323aa2&query=Game+Background
 s.bgpic("bg.png")
 
-s = turtle.Screen()
-
 # TODO 기본 기능 4. 효과음 넣기(따로 재생)
 # 음원 파일 출처: https://pixabay.com/ko/music/search/genre/%eb%a9%8d%ec%b2%ad%ec%9d%b4/?pagi=2
 pygame.mixer.init()
@@ -357,12 +359,13 @@ pygame.mixer.music.play(-1)
 floating_message = FloatingMessage("top")
 
 if turtle_speed == 0 or enemy_cnt == 0 or enemy_speed == 0 or jewel_cnt == 0:
-    floating_message.display_content("Can't Start Game !") # 게임 종료 메시지: 게임을 시작할 수 없음
+    # 게임 종료 메시지: 게임을 시작할 수 없음
+    floating_message.display_content("Can't Start Game !")
     time.sleep(GameConfig.freeze_time)
     # TODO 기본 기능 1. 게임 종료
     sys.exit(1)
 
-# TODO 기본 기능 3. 캐릭터, 적 거북, 보석 이미지 바꾸기
+# TODO 기본 기능 3. 캐릭터, 적, 보석 이미지 바꾸기
 shapes = GameConfig.shapes + GameConfig.enemy_shapes
 for shape in shapes:
     s.register_shape(f"shape_{shape}.gif")
