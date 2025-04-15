@@ -4,8 +4,6 @@ import random
 import sys
 import time
 
-# TODO 추가기능 6. 레벨업
-
 class GameConfig:
     up = 90
     down = 270
@@ -33,8 +31,8 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
         turtle.Turtle.__init__(self)
         self.penup()
 
+        # 이미지 파일 출처: https://emojipedia.org/apple/ios-18.4/turtle
         self.shape("shape_hunter.gif")
-        # 출처: https://emojipedia.org/apple/ios-18.4/turtle
         self.speed = speed
         self.score = 0
         
@@ -105,7 +103,6 @@ class Hunter(turtle.Turtle): # Turtle 클래스 상속
     def is_failed(self):
         global enemy_cnt
         return enemy_cnt <= 0
-        # return self.score < 0 # 레벨 시스템을 추가함에 따라 is_failed 판별식을 수정함
     
     def is_succeed(self):
         return self.score >= GameConfig.score_unit
@@ -116,6 +113,7 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         self.penup()
 
         # TODO 추가 기능 2. 적 이미지 랜덤 부여
+        # 이미지 파일 출처: https://emojipedia.org/apple/ios-18.4
         self.shape(f"shape_{GameConfig.enemy_shapes[random.randint(0, 5)]}.gif")
 
         self.speed = speed
@@ -149,7 +147,8 @@ class Enemy(turtle.Turtle): # Turtle 클래스 상속
         elif y < GameConfig.min_y:
             self.setheading(GameConfig.up)
 
-        if random.randint(1, 100) == 1: # TODO 추가 기능 4. 적이 무작위가 아니라 정확히 헌터를 따라오도록
+        # TODO 추가 기능 4. 적이 무작위가 아니라 정확히 헌터를 따라오도록
+        if random.randint(1, 100) == 1:
             self.setheading(self.towards(self.hunter))
         
         if self.stamp_idx >= GameConfig.max_stamps:
@@ -254,6 +253,7 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
     def score(self):
         if self.is_continued is False:
             time.sleep(GameConfig.freeze_time)
+            # TODO 기본 기능 1. 게임 종료
             sys.exit(1)
         
         self.floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
@@ -290,9 +290,10 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         global enemy_cnt
         global jewel_cnt
         
-        self.s.update()
+        self.s.update() # 화면 강제 갱신
+        # TODO 추가 기능 6. 레벨업
         self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
-        self.s.update()  # 화면 강제 갱신
+        self.s.update() # 화면 강제 갱신
         time.sleep(GameConfig.freeze_time)
 
         self.hunter.stop()
@@ -315,7 +316,7 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         global jewel_cnt
         return jewel_cnt <= 0
 
-# TODO 추가기능 1. 입력 간소화
+# TODO 추가 기능 1. 입력 간소화
 input = input()
 tmp_input = None
 if input.count(" ") == 0: # 숫자 하나만 입력하는 경우 처리
@@ -329,12 +330,16 @@ turtle_speed, enemy_cnt, enemy_speed, jewel_cnt = tmp_input
 s = turtle.Screen()
 s.title("거북이 보물찾기 게임")
 
-s.bgpic("bg.png") # 이미지 파일 출처: https://www.freepik.com/free-photo/abstract-bright-green-square-pixel-tile-mosaic-wall-background-texture_18487439.htm#fromView=search&page=2&position=19&uuid=f54e2323-252e-4269-be22-c853ed323aa2&query=Game+Background
+# TODO 기본 기능 2. 스크린 배경 그림 넣기
+# 이미지 파일 출처: https://www.freepik.com/free-photo/abstract-bright-green-square-pixel-tile-mosaic-wall-background-texture_18487439.htm#fromView=search&page=2&position=19&uuid=f54e2323-252e-4269-be22-c853ed323aa2&query=Game+Background
+s.bgpic("bg.png")
 
-# pygame.init() # 에러 발생 원인
 s = turtle.Screen()
+
+# TODO 기본 기능 4. 효과음 넣기(따로 재생)
+# 음원 파일 출처: https://pixabay.com/ko/music/search/genre/%eb%a9%8d%ec%b2%ad%ec%9d%b4/?pagi=2
 pygame.mixer.init()
-pygame.mixer.music.load("bgm.mp3") # 배경 이미지 파일 출처: https://pixabay.com/ko/music/search/genre/%eb%a9%8d%ec%b2%ad%ec%9d%b4/?pagi=2
+pygame.mixer.music.load("bgm.mp3")
 
 s.setup(500, 500)
 s.tracer(0) # 코드 실행 과정을 화면에 표시하지 않음
@@ -346,8 +351,10 @@ floating_message = FloatingMessage("top")
 if turtle_speed == 0 or enemy_cnt == 0 or enemy_speed == 0 or jewel_cnt == 0:
     floating_message.display_content("Can't Start Game !") # 게임 종료 메시지: 게임을 시작할 수 없음
     time.sleep(GameConfig.freeze_time)
+    # TODO 기본 기능 1. 게임 종료
     sys.exit(1)
 
+# TODO 기본 기능 3. 캐릭터, 적 거북, 보석 이미지 바꾸기
 shapes = GameConfig.shapes + GameConfig.enemy_shapes
 for shape in shapes:
     s.register_shape(f"shape_{shape}.gif")
