@@ -328,7 +328,7 @@ turtle_speed, enemy_cnt, enemy_speed, jewel_cnt = tmp_input
 s = turtle.Screen()
 s.title("거북이 보물찾기 게임")
 
-s.bgpic("bg.jpg") # 음원 파일 출처: GPT
+s.bgpic("bg.png") # 이미지 파일 출처: https://www.freepik.com/free-photo/abstract-bright-green-square-pixel-tile-mosaic-wall-background-texture_18487439.htm#fromView=search&page=2&position=19&uuid=f54e2323-252e-4269-be22-c853ed323aa2&query=Game+Background
 
 # pygame.init() # 에러 발생 원인
 s = turtle.Screen()
