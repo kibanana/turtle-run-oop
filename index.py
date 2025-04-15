@@ -290,6 +290,7 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         global enemy_cnt
         global jewel_cnt
         
+        self.s.update()
         self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
         self.s.update()  # 화면 강제 갱신
         time.sleep(GameConfig.freeze_time)
