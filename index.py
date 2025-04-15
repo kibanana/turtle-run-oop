@@ -18,7 +18,7 @@ class GameConfig:
     colors = ["beige", "yellow", "pink", "orange", "red", "black"]
     shapes = ["hunter", "jewel", "twinkle"]
     enemy_shapes = ["devil", "skull", "ghost", "alien", "crocodile", "jellyfish"]
-    freeze_time = 1
+    freeze_time = 0.5
 
 class GameVisualConfig:
     default_text_align = "center"
@@ -198,11 +198,9 @@ class Jewel(turtle.Turtle):
         self.showturtle() # 레벨업 - 보석 재생성
 
 class FloatingMessage(turtle.Turtle):
-    def __init__(self):
-        self.content = None
-
     def __init__(self, position = "bottom"):
         turtle.Turtle.__init__(self)
+        self.content = None
         self.shape(GameVisualConfig.default_shape)
         self.color(GameVisualConfig.default_font_color)
         if position == "top":
@@ -216,18 +214,24 @@ class FloatingMessage(turtle.Turtle):
             self.ycor = 200
     
     def display_score(self, score):
+        global turtle 
+
         self.content = f"Score: {str(score)}"
 
         self.clear()
         self.teleport(self.xcor, self.ycor)
         self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
+        turtle.update()
 
     def display_content(self, content):
+        global turtle 
+
         self.content = content
-    
         self.clear()
         self.teleport(self.xcor, self.ycor)
         self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
+        turtle.update()
+        time.sleep(GameConfig.freeze_time)
 
 class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
     def __init__(self, initial_et, initial_jt, s, hunter, floating_message, floating_score, floating_countdown):
@@ -250,8 +254,6 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         self.floating_countdown.display_content("Start !")
         for i in range(3):
             self.floating_countdown.display_content(str(3 - i))
-            self.s.update()
-            time.sleep(GameConfig.freeze_time)
         self.floating_countdown.clear()
     
     def score(self):
@@ -260,12 +262,15 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
             # TODO 기본 기능 1. 게임 종료
             sys.exit(1)
         
-        self.floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
-        
         if gameManager._is_level_clear():
-            gameManager._level_up()
+            self._level_up()
         elif hunter.is_failed():
             self._end()
+        else:
+            self.floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
+            
+        
+        
     
     def _reset(self, enemy_cnt, jewel_cnt):
         for e in self.enemies:
@@ -295,15 +300,14 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         global jewel_cnt
         
         # TODO 추가 기능 6. 레벨업
-        self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
-        self.s.update() # 화면 강제 갱신
-        time.sleep(GameConfig.freeze_time)
-        self.floating_message.clear()
 
         self.hunter.stop()
         for e in self.enemies:
             e.stop()
-        
+
+        self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
+        self.floating_message.clear()
+
         self.level += 1
         self.hunter.level_up(self.level)
         self._reset(self.initial_et, self.initial_jt)
@@ -354,7 +358,6 @@ floating_message = FloatingMessage("top")
 
 if turtle_speed == 0 or enemy_cnt == 0 or enemy_speed == 0 or jewel_cnt == 0:
     floating_message.display_content("Can't Start Game !") # 게임 종료 메시지: 게임을 시작할 수 없음
-    s.update()
     time.sleep(GameConfig.freeze_time)
     # TODO 기본 기능 1. 게임 종료
     sys.exit(1)
