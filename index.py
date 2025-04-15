@@ -208,6 +208,9 @@ class FloatingMessage(turtle.Turtle):
         if position == "top":
             self.xcor = 0
             self.ycor = 90
+        elif position == "middle":
+            self.xcor = 0
+            self.ycor = 145
         elif position == "bottom":
             self.xcor = 0
             self.ycor = 200
@@ -227,7 +230,7 @@ class FloatingMessage(turtle.Turtle):
         self.write(self.content, False, GameVisualConfig.default_text_align, (GameVisualConfig.default_font, 30))
 
 class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
-    def __init__(self, initial_et, initial_jt, s, hunter, floating_message, floating_score):
+    def __init__(self, initial_et, initial_jt, s, hunter, floating_message, floating_score, floating_countdown):
         self.initial_et = initial_et
         self.initial_jt = initial_jt
         self.s = s
@@ -236,6 +239,7 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         self.jewels = []
         self.floating_message = floating_message
         self.floating_score = floating_score
+        self.floating_countdown = floating_countdown
         self.is_continued = True
         self.level = 1
 
@@ -243,12 +247,12 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
 
     def start(self):
         # TODO 추가 기능 3. 시작 카운트다운
-        self.floating_message.display_content("Start !")
+        self.floating_countdown.display_content("Start !")
         for i in range(3):
-            self.floating_message.display_content(str(3 - i))
+            self.floating_countdown.display_content(str(3 - i))
             self.s.update()
             time.sleep(GameConfig.freeze_time)
-        self.floating_message.clear()
+        self.floating_countdown.clear()
     
     def score(self):
         if self.is_continued is False:
@@ -258,10 +262,10 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         
         self.floating_score.display_score(hunter.score) # 게임 진행 메시지: 점수
         
-        if hunter.is_failed():
+        if gameManager._is_level_clear():
+            gameManager._level_up()
+        elif hunter.is_failed():
             self._end()
-        elif self._is_level_clear():
-            self._level_up()
     
     def _reset(self, enemy_cnt, jewel_cnt):
         for e in self.enemies:
@@ -290,11 +294,11 @@ class GameManager: # Game -> GameManager 클래스 변경 후 역할 변경
         global enemy_cnt
         global jewel_cnt
         
-        self.s.update() # 화면 강제 갱신
         # TODO 추가 기능 6. 레벨업
         self.floating_message.display_content(f"Complete ! Level {self.level}") # 게임 진행 메시지: 완료 & 레벨업
         self.s.update() # 화면 강제 갱신
         time.sleep(GameConfig.freeze_time)
+        self.floating_message.clear()
 
         self.hunter.stop()
         for e in self.enemies:
@@ -350,6 +354,7 @@ floating_message = FloatingMessage("top")
 
 if turtle_speed == 0 or enemy_cnt == 0 or enemy_speed == 0 or jewel_cnt == 0:
     floating_message.display_content("Can't Start Game !") # 게임 종료 메시지: 게임을 시작할 수 없음
+    s.update()
     time.sleep(GameConfig.freeze_time)
     # TODO 기본 기능 1. 게임 종료
     sys.exit(1)
@@ -364,7 +369,9 @@ hunter = Hunter(turtle_speed)
 floating_score = FloatingMessage("bottom")
 floating_score.display_score(0)
 
-gameManager = GameManager(enemy_cnt, jewel_cnt, s, hunter, floating_message, floating_score)
+floating_countdown = FloatingMessage("middle")
+
+gameManager = GameManager(enemy_cnt, jewel_cnt, s, hunter, floating_message, floating_score, floating_countdown)
 
 turtle.listen()
 turtle.onkeypress(hunter.up, "Up")
@@ -378,14 +385,14 @@ while True:
     s.update()
     hunter.move()
 
-    for e in gameManager.enemies:
+    for e in gameManager.enemies[:]:
         e.move()
         if hunter.distance(e) < 12:
             e.die()
             gameManager.enemies.remove(e)
             hunter.lose_score()
     
-    for j in gameManager.jewels:
+    for j in gameManager.jewels[:]:
         j.twinkle()
         if hunter.distance(j) < 12:
             j.die()
